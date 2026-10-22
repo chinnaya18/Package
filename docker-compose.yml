@@ -1,0 +1,83 @@
+services:
+  # ── Frontend ──
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - load-balancer
+    networks:
+      - loadflow-net
+
+  # ── Load Balancer / API Gateway ──
+  load-balancer:
+    build:
+      context: ./load-balancer
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVER_1_URL=http://server1:8001
+      - SERVER_2_URL=http://server2:8001
+      - SERVER_3_URL=http://server3:8001
+      - SERVER_4_URL=http://server4:8001
+      - HEALTH_CHECK_INTERVAL=3
+    depends_on:
+      - server1
+      - server2
+      - server3
+      - server4
+    networks:
+      - loadflow-net
+
+  # ── Backend Server 1 ──
+  server1:
+    build:
+      context: ./backend-server
+    environment:
+      - SERVER_ID=server-1
+      - SERVER_PORT=8001
+      - BASE_DELAY_MS=80
+      - DELAY_JITTER_MS=40
+    networks:
+      - loadflow-net
+
+  # ── Backend Server 2 ──
+  server2:
+    build:
+      context: ./backend-server
+    environment:
+      - SERVER_ID=server-2
+      - SERVER_PORT=8001
+      - BASE_DELAY_MS=100
+      - DELAY_JITTER_MS=50
+    networks:
+      - loadflow-net
+
+  # ── Backend Server 3 ──
+  server3:
+    build:
+      context: ./backend-server
+    environment:
+      - SERVER_ID=server-3
+      - SERVER_PORT=8001
+      - BASE_DELAY_MS=150
+      - DELAY_JITTER_MS=60
+    networks:
+      - loadflow-net
+
+  # ── Backend Server 4 ──
+  server4:
+    build:
+      context: ./backend-server
+    environment:
+      - SERVER_ID=server-4
+      - SERVER_PORT=8001
+      - BASE_DELAY_MS=120
+      - DELAY_JITTER_MS=45
+    networks:
+      - loadflow-net
+
+networks:
+  loadflow-net:
+    driver: bridge
